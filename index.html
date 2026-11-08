@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1a0f14">
+<title>Физиология — тест-тренажёр</title>
+<meta name="description" content="Физиология — тест-тренажёр: марафон, подбор по темам, история и рекорд серии.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Физиология — тест-тренажёр">
+<meta property="og:description" content="Тренажёр для подготовки к экзамену">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ФОН: разметка кардиографа + один импульс-луч -->
+<div id="bg" aria-hidden="true">
+  <div class="grid"></div>
+  <div class="beam"></div>
+  <div class="vign"></div>
+</div>
+
+<!-- ФИНАЛЬНАЯ ЭКГ-ВОЛНА (только при 100 %) -->
+<div id="ecgArena" aria-hidden="true">
+  <svg viewBox="0 0 1200 300" preserveAspectRatio="none">
+    <defs>
+      <mask id="ecgMask">
+        <rect id="ecgMaskRect" x="0" y="0" width="1200" height="300" fill="#fff"></rect>
+      </mask>
+    </defs>
+    <path id="ecgWave" mask="url(#ecgMask)" d="M0 150 H70 l12 0 l8 -14 l10 34 l12 -96 l14 150 l12 -74 h16 H230
+      l10 -8 l9 16 l11 -30 l12 58 l12 -36 h18 H470 l12 -10 l9 20 l11 -42 l12 74 l12 -42 h20 H700 l12 -12 l9 22
+      l11 -48 l12 82 l12 -44 h22 H940 l12 -9 l9 18 l11 -36 l12 64 l12 -37 h24 H1200"></path>
+  </svg>
+</div>
+
+<div id="app">
+
+  <!-- ==================== ГЛАВНОЕ МЕНЮ ==================== -->
+  <section class="screen" id="s-menu">
+    <div class="corner">
+      <button class="icon-btn" id="themeBtn" title="Сменить тему" aria-label="Сменить тему">
+        <svg id="ic-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg id="ic-sun" viewBox="0 0 24 24" hidden><circle cx="12" cy="12" r="4.4"/><path d="M12 2.6v2.4M12 19v2.4M2.6 12H5M19 12h2.4M5 5l1.7 1.7M17.3 17.3 19 19M19 5l-1.7 1.7M6.7 17.3 5 19"/></svg>
+      </button>
+    </div>
+
+    <h1 class="title" id="appTitle"></h1>
+    <p class="tagline" id="tagline"></p>
+    <p class="quote" id="quoteText"></p>
+
+    <div id="menuData">
+      <div class="menu-btns">
+        <button class="btn3d btn-red" id="btnStart"><span>Начать тест</span></button>
+        <button class="btn3d btn-vio" id="btnMarathon"><span>Марафон</span></button>
+        <button class="btn3d btn-gr" id="btnTopics"><span>По темам</span></button>
+        <button class="btn3d btn-gr" id="btnHistory"><span>История</span></button>
+      </div>
+
+      <div class="card">
+        <h3>Рекорд серии</h3>
+        <div class="streak-row">
+          <span class="flame rec-flame" id="recFlame" hidden></span>
+          <span class="streak-num-big" id="recStreak">0</span>
+          <span class="best-sub">правильных ответов подряд</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Лучший результат</h3>
+        <div class="best-row">
+          <img class="best-rank" id="bestImg" alt="" hidden>
+          <span class="rank-letter" id="bestLetter" hidden></span>
+          <div>
+            <div class="best-pct" id="bestPct">—</div>
+            <div class="best-sub" id="bestSub">тестов ещё не было</div>
+            <div class="seen-ind" id="seenInd"></div>
+          </div>
+          <div class="best-date" id="bestDate"></div>
+        </div>
+        <div id="bestWrap" hidden>
+          <div class="streak-row mini">
+            <span class="flame" id="bestFlame"></span>
+            <div>
+              <div class="rec-line">Рекорд серии <span id="recStreak2">0</span></div>
+              <div class="best-sub" id="recWhen">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Настройка</h3>
+        <div class="switch-row" id="reactiveRow">
+          <div>
+            <h3 class="switch-title">Реактивный пульс</h3>
+            <div class="switch-sub">Пульс учащается и краснеет при ошибках</div>
+          </div>
+          <div class="switch-right">
+            <span class="switch-state" id="reactiveState">ВКЛ</span>
+            <div class="switch on" id="reactiveSw"><span></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Отмеченные вопросы</h3>
+        <div class="bank-row">
+          <span class="bank-sub" id="flagCount">Отмечено вопросов: 0</span>
+          <button class="btn3d btn-gr" id="btnCopyFlags"><span>Скопировать</span></button>
+        </div>
+      </div>
+
+      <p class="warn" id="localWarn" hidden>Данные не сохраняются: браузер в приватном режиме</p>
+    </div>
+    <div class="empty-bank" id="menuEmpty" hidden></div>
+  </section>
+
+  <!-- ==================== МАРАФОН ==================== -->
+  <section class="screen" id="s-marathon" hidden>
+    <h2 class="sec-title">Марафон</h2>
+    <p class="hint">Сколько вопросов за один заход?</p>
+    <div class="mq-big" id="mqBig">50</div>
+    <div class="mq-label">вопросов подряд без остановки</div>
+    <input type="range" class="slider" id="mqSlider" min="50" max="180" step="10" value="50" aria-label="Количество вопросов">
+    <div class="slider-scale"><span>50</span><span>115</span><span>180</span></div>
+    <div class="mq-actions">
+      <button class="btn3d btn-red" id="mqStart"><span>Начать марафон</span></button>
+      <button class="btn3d btn-gr" data-back><span>Назад</span></button>
+    </div>
+  </section>
+
+  <!-- ==================== ТЕМЫ ==================== -->
+  <section class="screen" id="s-topics" hidden>
+    <h2 class="sec-title">Выбор темы</h2>
+    <p class="hint">Порядок случайный — тема скрыта до первого вопроса</p>
+    <div class="topics-list" id="topicsList"></div>
+    <div class="back-line"><button class="btn3d btn-gr" data-back><span>Назад</span></button></div>
+  </section>
+
+  <!-- ==================== ТЕСТ ==================== -->
+  <section class="screen" id="s-test" hidden>
+    <div class="hud">
+      <button class="btn3d btn-red exit3d" id="btnExit" title="Выйти из теста">
+        <span>
+          <svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          Выйти
+        </span>
+      </button>
+
+      <div class="counter" id="counter" aria-live="polite"></div>
+
+      <div class="timer" id="timerBox">
+        <svg class="tring" viewBox="0 0 52 52" aria-hidden="true">
+          <circle class="tbg" cx="26" cy="26" r="21"></circle>
+          <circle class="tarc" id="timerArc" cx="26" cy="26" r="21"></circle>
+        </svg>
+        <span class="tnum" id="timerNum">0:00</span>
+      </div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress" id="progressTrack">
+        <div class="pfill-wrap" id="pfillWrap"><div class="pfill"></div></div>
+        <div class="pflow" id="pflow"></div>
+      </div>
+      <div class="ptorch" id="ptorch"></div>
+    </div>
+
+    <div class="streak">
+      <span class="flame" id="flame"></span>
+      <span class="streak-num" id="streakNum">0</span>
+    </div>
+
+    <div id="quizArea">
+      <div class="quiz-meta">
+        <div class="topic-badge" id="topicBadge" hidden></div>
+        <button class="flag-btn" id="btnFlag" type="button" title="Отметить вопрос для разбора" aria-label="Отметить вопрос">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4h12l-2.6 4L17 12H5"/></svg>
+          <span>Отметить</span>
+        </button>
+      </div>
+      <h2 class="qcard" id="qText"></h2>
+      <div class="opts" id="opts"></div>
+      <div id="timeoutNote" class="timeout-note" hidden>Время вышло</div>
+    </div>
+  </section>
+
+  <!-- ==================== РЕЗУЛЬТАТЫ ==================== -->
+  <section class="screen res-wrap" id="s-results" hidden>
+    <h2 class="sec-title">Результат</h2>
+
+    <div class="rank-stage" id="rankStage">
+      <div class="rank-glow" id="rankGlow"></div>
+      <img class="rank-img" id="rankImg" alt="" hidden>
+      <span class="rank-letter big" id="rankLetter" hidden></span>
+    </div>
+
+    <div class="res-pct" id="resPct">0%</div>
+    <div class="flatline" id="flatLine" hidden></div>
+    <div class="res-of" id="resOf"></div>
+    <div class="res-rank-name" id="resRankName"></div>
+    <div class="res-comment" id="resComment"></div>
+    <div class="res-time" id="resTime"></div>
+
+    <div class="res-btns">
+      <button class="btn3d btn-gr" id="btnErrors"><span>Посмотреть ошибки (<span id="errCount">0</span>)</span></button>
+      <button class="btn3d btn-vio" id="btnRepeat"><span>Повторить те же вопросы</span></button>
+      <button class="btn3d btn-red" id="btnFix"><span>Работа над ошибками</span></button>
+      <button class="btn3d btn-gr" id="btnNew"><span>Новый тест</span></button>
+      <button class="btn3d btn-gr" data-back><span>В меню</span></button>
+    </div>
+  </section>
+
+  <!-- ==================== ОШИБКИ ==================== -->
+  <section class="screen" id="s-errors" hidden>
+    <div class="err-head">
+      <h2 class="sec-title">Ошибки</h2>
+      <button class="btn3d btn-red" id="btnErrRetry"><span>Разобрать ещё раз</span></button>
+    </div>
+    <div id="errList"></div>
+    <div class="back-line"><button class="btn3d btn-gr" id="errBack"><span>Назад</span></button></div>
+  </section>
+
+  <!-- ==================== ИСТОРИЯ ==================== -->
+  <section class="screen" id="s-history" hidden>
+    <h2 class="sec-title">История</h2>
+    <div class="hist-list" id="histList"></div>
+    <div id="histEmpty" class="hist-empty" hidden>Пока пусто. Пройди первый тест.</div>
+    <div id="histActionsWrap" class="hist-actions" hidden>
+      <button class="btn3d btn-gr" id="btnHistClear"><span>Очистить историю</span></button>
+    </div>
+    <div class="back-line"><button class="btn3d btn-gr" data-back><span>Назад</span></button></div>
+  </section>
+
+  <a class="btn3d tg-btn" id="tgBtn" target="_blank" rel="noopener">
+    <span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3 10.5 14.5M22 3 14.5 21l-4-6.5L3 10.5 22 3z"/></svg>
+      Telegram
+    </span>
+  </a>
+
+</div><!-- /#app -->
+
+<script src="script.js"></script>
+</body>
+</html>
